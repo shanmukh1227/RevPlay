@@ -181,7 +181,7 @@ public class ArtistMenu {
 
         if (songId > 0) {
             System.out.println("Song uploaded successfully!");
-            System.out.println("Song ID = " + songId);
+            System.out.println("Song ID : " + songId);
         } else {
             System.out.println("Upload failed!");
         }
