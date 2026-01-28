@@ -10,58 +10,63 @@ import java.util.List;
 
 public class ArtistDAO {
 
-    public List<String> searchArtists(String keyword) {
+	public List<String> searchArtists(String keyword) {
 
-        String sql =
-            "SELECT u.user_id, u.name, ap.genre, ap.bio " +
-            "FROM users u " +
-            "LEFT JOIN artist_profile ap ON u.user_id = ap.artist_id " +
-            "WHERE u.role = 'ARTIST' " +
-            "AND (LOWER(u.name) LIKE ? " +
-            "OR LOWER(ap.genre) LIKE ? " +
-            "OR LOWER(ap.bio) LIKE ?) " +
-            "ORDER BY u.name";
+		String sql = "SELECT u.user_id, u.name, ap.genre, ap.bio "
+				+ "FROM users u "
+				+ "LEFT JOIN artist_profile ap ON u.user_id = ap.artist_id "
+				+ "WHERE u.role = 'ARTIST' " + "AND (LOWER(u.name) LIKE ? "
+				+ "OR LOWER(ap.genre) LIKE ? " + "OR LOWER(ap.bio) LIKE ?) "
+				+ "ORDER BY u.name";
 
-        List<String> list = new ArrayList<String>();
+		List<String> list = new ArrayList<String>();
 
-        Connection con = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+		Connection con = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
 
-        String like = "%" + keyword.toLowerCase() + "%";
+		String like = "%" + keyword.toLowerCase() + "%";
 
-        try {
-            con = DBConnection.getConnection();
-            ps = con.prepareStatement(sql);
+		try {
+			con = DBConnection.getConnection();
+			ps = con.prepareStatement(sql);
 
-            ps.setString(1, like);
-            ps.setString(2, like);
-            ps.setString(3, like);
+			ps.setString(1, like);
+			ps.setString(2, like);
+			ps.setString(3, like);
 
-            rs = ps.executeQuery();
+			rs = ps.executeQuery();
 
-            while (rs.next()) {
-                String row =
-                        rs.getInt("user_id")
-                        + " | "
-                        + rs.getString("name")
-                        + " | Genre: "
-                        + rs.getString("genre")
-                        + " | Bio: "
-                        + rs.getString("bio");
+			while (rs.next()) {
+				String row = rs.getInt("user_id") + " | "
+						+ rs.getString("name") + " | Genre: "
+						+ rs.getString("genre") + " | Bio: "
+						+ rs.getString("bio");
 
-                list.add(row);
-            }
+				list.add(row);
+			}
 
-        } catch (Exception e) {
-            e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
 
-        } finally {
-            try { if (rs != null) rs.close(); } catch (Exception e) {}
-            try { if (ps != null) ps.close(); } catch (Exception e) {}
-            try { if (con != null) con.close(); } catch (Exception e) {}
-        }
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (ps != null)
+					ps.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (con != null)
+					con.close();
+			} catch (Exception e) {
+			}
+		}
 
-        return list;
-    }
+		return list;
+	}
 }

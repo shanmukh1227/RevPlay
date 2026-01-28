@@ -11,216 +11,252 @@ import java.util.List;
 
 public class AlbumDAO {
 
-	public int createAlbum(int artistId,
-            String albumName,
-            String genre,
-            String releaseDate) {
+	public int createAlbum(int artistId, String albumName, String genre,
+			String releaseDate) {
 
-        Connection con = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+		Connection con = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
 
-        String insertSql =
-        "INSERT INTO albums(album_id, album_name, genre, release_date, artist_id) " +
-        "VALUES (albums_seq.NEXTVAL, ?, ?, ?, ?)";
+		String insertSql = "INSERT INTO albums(album_id, album_name, genre, release_date, artist_id) "
+				+ "VALUES (albums_seq.NEXTVAL, ?, ?, ?, ?)";
 
-        String idSql =
-        "SELECT albums_seq.CURRVAL FROM dual";
+		String idSql = "SELECT albums_seq.CURRVAL FROM dual";
 
-        try {
-        con = DBConnection.getConnection();
+		try {
+			con = DBConnection.getConnection();
 
+			ps = con.prepareStatement(insertSql);
+			ps.setString(1, albumName);
+			ps.setString(2, genre);
 
-       ps = con.prepareStatement(insertSql);
-       ps.setString(1, albumName);
-       ps.setString(2, genre);
+			if (releaseDate == null || releaseDate.trim().length() == 0) {
+				ps.setNull(3, java.sql.Types.DATE);
+			} else {
+				ps.setDate(3, java.sql.Date.valueOf(releaseDate));
+			}
 
-       if (releaseDate == null || releaseDate.trim().length() == 0) {
-        ps.setNull(3, java.sql.Types.DATE);
-       } 
-       else {
-          ps.setDate(3, java.sql.Date.valueOf(releaseDate));
-        }
+			ps.setInt(4, artistId);
+			ps.executeUpdate();
+			ps.close();
 
-       ps.setInt(4, artistId);
-       ps.executeUpdate();
-       ps.close();
+			ps = con.prepareStatement(idSql);
+			rs = ps.executeQuery();
 
+			if (rs.next()) {
+				return rs.getInt(1);
+			}
 
-      ps = con.prepareStatement(idSql);
-      rs = ps.executeQuery();
+		} catch (SQLException e) {
+			e.printStackTrace();
 
-      if (rs.next()) {
-       return rs.getInt(1); 
-        }
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (ps != null)
+					ps.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (con != null)
+					con.close();
+			} catch (Exception e) {
+			}
+		}
 
-       } catch (SQLException e) {
-      e.printStackTrace();
+		return -1;
+	}
 
-       } finally {
-         try { if (rs != null) rs.close(); } catch (Exception e) {}
-        try { if (ps != null) ps.close(); } catch (Exception e) {}
-       try { if (con != null) con.close(); } catch (Exception e) {}
-       }
+	public List<String> viewMyAlbums(int artistId) {
 
-       return -1;
-}
+		List<String> list = new ArrayList<String>();
 
+		String sql = "SELECT album_id, album_name, genre, release_date, created_at "
+				+ "FROM albums WHERE artist_id=? ORDER BY created_at DESC";
 
+		Connection con = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
 
-    public List<String> viewMyAlbums(int artistId) {
+		try {
+			con = DBConnection.getConnection();
+			ps = con.prepareStatement(sql);
+			ps.setInt(1, artistId);
 
-        List<String> list = new ArrayList<String>();
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				list.add(rs.getInt("album_id") + " | "
+						+ rs.getString("album_name") + " | "
+						+ rs.getString("genre") + " | "
+						+ rs.getString("release_date"));
+			}
 
-        String sql =
-            "SELECT album_id, album_name, genre, release_date, created_at " +
-            "FROM albums WHERE artist_id=? ORDER BY created_at DESC";
+		} catch (SQLException e) {
+			e.printStackTrace();
 
-        Connection con = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (ps != null)
+					ps.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (con != null)
+					con.close();
+			} catch (Exception e) {
+			}
+		}
 
-        try {
-            con = DBConnection.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setInt(1, artistId);
+		return list;
+	}
 
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(
-                    rs.getInt("album_id") + " | " +
-                    rs.getString("album_name") + " | " +
-                    rs.getString("genre") + " | " +
-                    rs.getString("release_date")
-                );
-            }
+	public boolean addSongToAlbum(int albumId, int songId) {
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+		String sql = "INSERT INTO album_songs(album_id, song_id) VALUES(?, ?)";
 
-        } finally {
-            try { if (rs != null) rs.close(); } catch (Exception e) {}
-            try { if (ps != null) ps.close(); } catch (Exception e) {}
-            try { if (con != null) con.close(); } catch (Exception e) {}
-        }
+		Connection con = null;
+		PreparedStatement ps = null;
 
-        return list;
-    }
+		try {
+			con = DBConnection.getConnection();
+			ps = con.prepareStatement(sql);
 
-    public boolean addSongToAlbum(int albumId, int songId) {
+			ps.setInt(1, albumId);
+			ps.setInt(2, songId);
 
-        String sql =
-            "INSERT INTO album_songs(album_id, song_id) VALUES(?, ?)";
+			ps.executeUpdate();
+			return true;
 
-        Connection con = null;
-        PreparedStatement ps = null;
+		} catch (Exception e) {
+			System.out.println("Song already in album or invalid ID.");
+			return false;
 
-        try {
-            con = DBConnection.getConnection();
-            ps = con.prepareStatement(sql);
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (con != null)
+					con.close();
+			} catch (Exception e) {
+			}
+		}
+	}
 
-            ps.setInt(1, albumId);
-            ps.setInt(2, songId);
+	public List<String> viewAlbumSongs(int albumId) {
 
-            ps.executeUpdate();
-            return true;
+		List<String> list = new ArrayList<String>();
 
-        } catch (Exception e) {
-            System.out.println("Song already in album or invalid ID.");
-            return false;
+		String sql = "SELECT s.song_id, s.title, s.genre "
+				+ "FROM album_songs a "
+				+ "JOIN songs s ON a.song_id = s.song_id "
+				+ "WHERE a.album_id=? " + "ORDER BY s.title";
 
-        } finally {
-            try { if (ps != null) ps.close(); } catch (Exception e) {}
-            try { if (con != null) con.close(); } catch (Exception e) {}
-        }
-    }
-    public List<String> viewAlbumSongs(int albumId) {
+		Connection con = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
 
-        List<String> list = new ArrayList<String>();
+		try {
+			con = DBConnection.getConnection();
+			ps = con.prepareStatement(sql);
+			ps.setInt(1, albumId);
 
-        String sql =
-            "SELECT s.song_id, s.title, s.genre " +
-            "FROM album_songs a " +
-            "JOIN songs s ON a.song_id = s.song_id " +
-            "WHERE a.album_id=? " +
-            "ORDER BY s.title";
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				list.add(rs.getInt("song_id") + " | " + rs.getString("title")
+						+ " | " + rs.getString("genre"));
+			}
 
-        Connection con = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+		} catch (Exception e) {
+			e.printStackTrace();
 
-        try {
-            con = DBConnection.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setInt(1, albumId);
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (ps != null)
+					ps.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (con != null)
+					con.close();
+			} catch (Exception e) {
+			}
+		}
 
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(
-                    rs.getInt("song_id") + " | " +
-                    rs.getString("title") + " | " +
-                    rs.getString("genre")
-                );
-            }
+		return list;
+	}
 
-        } catch (Exception e) {
-            e.printStackTrace();
+	public List<String> searchAlbums(String keyword) {
 
-        } finally {
-            try { if (rs != null) rs.close(); } catch (Exception e) {}
-            try { if (ps != null) ps.close(); } catch (Exception e) {}
-            try { if (con != null) con.close(); } catch (Exception e) {}
-        }
+		List<String> list = new ArrayList<String>();
 
-        return list;
-    }
-    
-    public List<String> searchAlbums(String keyword) {
+		String sql = "SELECT a.album_id, a.album_name, a.genre, u.name AS artist_name "
+				+ "FROM albums a "
+				+ "JOIN users u ON a.artist_id = u.user_id "
+				+ "WHERE LOWER(a.album_name) LIKE ? "
+				+ "OR LOWER(a.genre) LIKE ? "
+				+ "OR LOWER(u.name) LIKE ? "
+				+ "ORDER BY a.album_name";
 
-        List<String> list = new ArrayList<String>();
+		Connection con = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
 
-        String sql =
-            "SELECT a.album_id, a.album_name, a.genre, u.name AS artist_name " +
-            "FROM albums a " +
-            "JOIN users u ON a.artist_id = u.user_id " +
-            "WHERE LOWER(a.album_name) LIKE ? " +
-            "OR LOWER(a.genre) LIKE ? " +
-            "OR LOWER(u.name) LIKE ? " +
-            "ORDER BY a.album_name";
+		String like = "%" + keyword.toLowerCase() + "%";
 
-        Connection con = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+		try {
+			con = DBConnection.getConnection();
+			ps = con.prepareStatement(sql);
 
-        String like = "%" + keyword.toLowerCase() + "%";
+			ps.setString(1, like);
+			ps.setString(2, like);
+			ps.setString(3, like);
 
-        try {
-            con = DBConnection.getConnection();
-            ps = con.prepareStatement(sql);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				list.add(rs.getInt("album_id") + " | "
+						+ rs.getString("album_name") + " | "
+						+ rs.getString("genre") + " | Artist: "
+						+ rs.getString("artist_name"));
+			}
 
-            ps.setString(1, like);
-            ps.setString(2, like);
-            ps.setString(3, like);
+		} catch (SQLException e) {
+			e.printStackTrace();
 
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(
-                    rs.getInt("album_id") + " | " +
-                    rs.getString("album_name") + " | " +
-                    rs.getString("genre") + " | Artist: " +
-                    rs.getString("artist_name")
-                );
-            }
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (ps != null)
+					ps.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (con != null)
+					con.close();
+			} catch (Exception e) {
+			}
+		}
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-
-        } finally {
-            try { if (rs != null) rs.close(); } catch (Exception e) {}
-            try { if (ps != null) ps.close(); } catch (Exception e) {}
-            try { if (con != null) con.close(); } catch (Exception e) {}
-        }
-
-        return list;
-    }
+		return list;
+	}
 }

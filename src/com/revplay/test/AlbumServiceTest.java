@@ -11,35 +11,30 @@ import com.revplay.dao.AlbumDAO;
 
 public class AlbumServiceTest {
 
-    private AlbumService service = new AlbumService();
-    private AlbumDAO albumDAO = new AlbumDAO();
+	private AlbumService service = new AlbumService();
+	private AlbumDAO albumDAO = new AlbumDAO();
 
-    @Test
-    public void testCreateAlbum() {
+	@Test
+	public void testCreateAlbum() {
 
-        int albumId = albumDAO.createAlbum(
-                1,
-                "JUnit Album",
-                "TEST",
-                ""
-        );
+		int albumId = albumDAO.createAlbum(1, "JUnit Album", "TEST", "");
 
-        assertTrue(albumId > 0 || albumId == -1);
-    }
+		assertTrue(albumId > 0 || albumId == -1);
+	}
 
-    @Test
-    public void testAddSongToAlbum() {
+	@Test
+	public void testAddSongToAlbum() {
 
-        boolean result = service.addSongToAlbum(1, 1);
+		boolean result = service.addSongToAlbum(1, 1);
 
-        assertTrue(result || !result);
-    }
+		assertTrue(result || !result);
+	}
 
-    @Test
-    public void testViewAlbumSongs() {
+	@Test
+	public void testViewAlbumSongs() {
 
-        List<String> songs = service.viewAlbumSongs(1);
+		List<String> songs = service.viewAlbumSongs(1);
 
-        assertNotNull(songs);
-    }
+		assertNotNull(songs);
+	}
 }

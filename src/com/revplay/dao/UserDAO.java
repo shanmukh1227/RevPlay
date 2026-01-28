@@ -13,219 +13,242 @@ import java.sql.SQLIntegrityConstraintViolationException;
 
 public class UserDAO {
 
-    private static final Logger log =
-            Logger.getLogger(UserDAO.class);
+	private static final Logger log = Logger.getLogger(UserDAO.class);
 
-    public boolean registerUser(String name,
-                                String email,
-                                String password,
-                                String role,
-                                String securityQuestion,
-                                String securityAnswer) {
+	public boolean registerUser(String name, String email, String password,
+			String role, String securityQuestion, String securityAnswer) {
 
-        String sql ="INSERT INTO users(name,email,password,role,security_question,security_answer) " +"VALUES(?,?,?,?,?,?)";
+		log.info("Register attempt started for email=" + email);
 
-        Connection con = null;
-        PreparedStatement ps = null;
+		String sql = "INSERT INTO users(name,email,password,role,security_question,security_answer) "
+				+ "VALUES(?,?,?,?,?,?)";
 
-        try {
-            con = DBConnection.getConnection();
-            ps = con.prepareStatement(sql);
+		Connection con = null;
+		PreparedStatement ps = null;
 
-            ps.setString(1, name);
-            ps.setString(2, email);
-            ps.setString(3, password);
-            ps.setString(4, role);
-            ps.setString(5, securityQuestion);
-            ps.setString(6, securityAnswer);
+		try {
+			log.debug("Getting DB connection for register");
+			con = DBConnection.getConnection();
 
-            int rows = ps.executeUpdate();
-            if (rows > 0) {
-                log.info("User registered: " + email + " (role=" + role + ")");
-                return true;
-            }
+			ps = con.prepareStatement(sql);
 
-            log.warn("Registration failed for email: " + email);
-            return false;
+			ps.setString(1, name);
+			ps.setString(2, email);
+			ps.setString(3, password);
+			ps.setString(4, role);
+			ps.setString(5, securityQuestion);
+			ps.setString(6, securityAnswer);
 
-        } catch (SQLIntegrityConstraintViolationException e) {
-            System.out.println("Email already exists!");
-            log.warn("Registration failed - email already exists: " + email);
-            return false;
+			int rows = ps.executeUpdate();
 
-        } catch (SQLException e) {
-            log.error("Registration error for email: " + email, e);
-            e.printStackTrace();
-            return false;
+			if (rows > 0) {
+				log.info("User registered successfully: " + email);
+				return true;
+			}
 
-        } finally {
-            try {
-                if (ps != null) ps.close();
-                if (con != null) con.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+			log.warn("Registration failed (0 rows affected) for email=" + email);
+			return false;
 
-    public User login(String email, String password) {
+		} catch (SQLIntegrityConstraintViolationException e) {
+			log.warn("Registration failed - duplicate email: " + email);
+			return false;
 
-        String sql ="SELECT user_id, name, email, role " +"FROM users WHERE email=? AND password=?";
+		} catch (SQLException e) {
+			log.error("Registration SQL error for email=" + email, e);
+			return false;
 
-        Connection con = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+		} finally {
+			log.debug("Closing DB resources for register");
+			try {
+				if (ps != null)
+					ps.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (con != null)
+					con.close();
+			} catch (Exception e) {
+			}
+		}
+	}
 
-        try {
-            con = DBConnection.getConnection();
-            ps = con.prepareStatement(sql);
+	public User login(String email, String password) {
 
-            ps.setString(1, email);
-            ps.setString(2, password);
+		log.info("Login attempt for email=" + email);
 
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                User u = new User(rs.getInt("user_id"),rs.getString("name"),rs.getString("email"),rs.getString("role"));
-                log.info("Login success: " + email +" (userId=" + u.getUserId() + ")");
-                return u;
-            }
+		String sql = "SELECT user_id, name, email, role FROM users WHERE email=? AND password=?";
 
-            log.warn("Login failed: " + email);
-            return null;
+		Connection con = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
 
-        } catch (SQLException e) {
-            log.error("Login error for email: " + email, e);
-            e.printStackTrace();
-            return null;
+		try {
+			log.debug("Getting DB connection for login");
+			con = DBConnection.getConnection();
 
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (ps != null) ps.close();
-                if (con != null) con.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+			ps = con.prepareStatement(sql);
+			ps.setString(1, email);
+			ps.setString(2, password);
 
-    public String getSecurityQuestion(String email) {
+			rs = ps.executeQuery();
 
-        String sql ="SELECT security_question FROM users WHERE email=?";
+			if (rs.next()) {
+				User u = new User(rs.getInt("user_id"), rs.getString("name"),
+						rs.getString("email"), rs.getString("role"));
+				log.info("Login success for email=" + email);
+				return u;
+			}
 
-        Connection con = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+			log.warn("Login failed - invalid credentials for email=" + email);
+			return null;
 
-        try {
-            con = DBConnection.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, email);
+		} catch (SQLException e) {
+			log.error("Login SQL error for email=" + email, e);
+			return null;
 
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                log.info("Security question fetched for " + email);
-                return rs.getString("security_question");
-            }
+		} finally {
+			log.debug("Closing DB resources for login");
+			try {
+				if (rs != null)
+					rs.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (ps != null)
+					ps.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (con != null)
+					con.close();
+			} catch (Exception e) {
+			}
+		}
+	}
 
-            log.warn("Security question not found for email: " + email);
-            return null;
+	public String getSecurityQuestion(String email) {
 
-        } catch (SQLException e) {
-            log.error("Error fetching security question for " + email, e);
-            e.printStackTrace();
-            return null;
+		String sql = "SELECT security_question FROM users WHERE email=?";
 
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (ps != null) ps.close();
-                if (con != null) con.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+		Connection con = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
 
-    public boolean verifySecurityAnswer(String email, String answer) {
+		try {
+			con = DBConnection.getConnection();
+			ps = con.prepareStatement(sql);
+			ps.setString(1, email);
 
-        String sql =
-            "SELECT 1 FROM users WHERE email=? AND security_answer=?";
+			rs = ps.executeQuery();
+			if (rs.next()) {
+				log.info("Security question fetched for " + email);
+				return rs.getString("security_question");
+			}
 
-        Connection con = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+			log.warn("Security question not found for email: " + email);
+			return null;
 
-        try {
-            con = DBConnection.getConnection();
-            ps = con.prepareStatement(sql);
+		} catch (SQLException e) {
+			log.error("Error fetching security question for " + email, e);
+			e.printStackTrace();
+			return null;
 
-            ps.setString(1, email);
-            ps.setString(2, answer);
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+				if (ps != null)
+					ps.close();
+				if (con != null)
+					con.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
-            rs = ps.executeQuery();
-            boolean ok = rs.next();
+	public boolean verifySecurityAnswer(String email, String answer) {
 
-            if (ok) {
-                log.info("Security answer verified for " + email);
-            } else {
-                log.warn("Security answer incorrect for " + email);
-            }
+		String sql = "SELECT 1 FROM users WHERE email=? AND security_answer=?";
 
-            return ok;
+		Connection con = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
 
-        } catch (SQLException e) {
-            log.error("Error verifying security answer for " + email, e);
-            e.printStackTrace();
-            return false;
+		try {
+			con = DBConnection.getConnection();
+			ps = con.prepareStatement(sql);
 
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (ps != null) ps.close();
-                if (con != null) con.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+			ps.setString(1, email);
+			ps.setString(2, answer);
 
-    public boolean updatePassword(String email, String newPassword) {
+			rs = ps.executeQuery();
+			boolean ok = rs.next();
 
-        String sql =
-            "UPDATE users SET password=? WHERE email=?";
+			if (ok) {
+				log.info("Security answer verified for " + email);
+			} else {
+				log.warn("Security answer incorrect for " + email);
+			}
 
-        Connection con = null;
-        PreparedStatement ps = null;
+			return ok;
 
-        try {
-            con = DBConnection.getConnection();
-            ps = con.prepareStatement(sql);
+		} catch (SQLException e) {
+			log.error("Error verifying security answer for " + email, e);
+			e.printStackTrace();
+			return false;
 
-            ps.setString(1, newPassword);
-            ps.setString(2, email);
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+				if (ps != null)
+					ps.close();
+				if (con != null)
+					con.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
-            int rows = ps.executeUpdate();
-            if (rows > 0) {
-                log.info("Password updated for " + email);
-                return true;
-            }
+	public boolean updatePassword(String email, String newPassword) {
 
-            log.warn("Password update failed for email: " + email);
-            return false;
+		String sql = "UPDATE users SET password=? WHERE email=?";
 
-        } catch (SQLException e) {
-            log.error("Password update error for " + email, e);
-            e.printStackTrace();
-            return false;
+		Connection con = null;
+		PreparedStatement ps = null;
 
-        } finally {
-            try {
-                if (ps != null) ps.close();
-                if (con != null) con.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+		try {
+			con = DBConnection.getConnection();
+			ps = con.prepareStatement(sql);
+
+			ps.setString(1, newPassword);
+			ps.setString(2, email);
+
+			int rows = ps.executeUpdate();
+			if (rows > 0) {
+				log.info("Password updated for " + email);
+				return true;
+			}
+
+			log.warn("Password update failed for email: " + email);
+			return false;
+
+		} catch (SQLException e) {
+			log.error("Password update error for " + email, e);
+			e.printStackTrace();
+			return false;
+
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+				if (con != null)
+					con.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }
