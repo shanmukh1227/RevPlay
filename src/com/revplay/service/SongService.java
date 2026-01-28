@@ -73,28 +73,21 @@ public class SongService {
         return songDAO.viewFavorites(userId);
     }
 
-    public boolean uploadSong(String title,
-                              String genre,
-                              int durationSeconds,
-                              String releaseDate,
-                              int artistId) {
+	public int uploadSong(String title, String genre, int durationSeconds,
+			String releaseDate, int artistId) {
 
-        if (artistId <= 0) return false;
-        if (title == null || title.trim().isEmpty()) return false;
-        if (durationSeconds <= 0) return false;
+		if (artistId <= 0)
+			return -1;
+		if (title == null || title.trim().isEmpty())
+			return -1;
+		if (durationSeconds <= 0)
+			return -1;
 
-        if (genre == null) {
-            genre = "";
-        }
+		return songDAO.uploadSong(title.trim(),
+				genre == null ? "" : genre.trim(), durationSeconds,
+				releaseDate, artistId);
+	}
 
-        return songDAO.uploadSong(
-                title.trim(),
-                genre.trim(),
-                durationSeconds,
-                releaseDate,
-                artistId
-        );
-    }
 
     public List<String> viewMySongs(int artistId) {
         if (artistId <= 0) {

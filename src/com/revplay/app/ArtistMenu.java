@@ -4,6 +4,7 @@ import com.revplay.dao.AlbumDAO;
 import com.revplay.dao.ArtistProfileDAO;
 import com.revplay.model.ArtistProfile;
 import com.revplay.model.User;
+import com.revplay.service.AlbumService;
 import com.revplay.service.SongService;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public class ArtistMenu {
 
     public void show() {
         while (true) {
-            System.out.println("\n===== ARTIST MENU =====");
+            System.out.println("\n----- ARTIST MENU------");
             System.out.println("Welcome: " + artist.getName()
                     + " (Artist ID: " + artist.getUserId() + ")");
             System.out.println("1. Upload Song");
@@ -37,6 +38,10 @@ public class ArtistMenu {
             System.out.println("4. View My Albums");
             System.out.println("5. Song Statistics (Top Plays)");
             System.out.println("6. Artist Profile (View/Update)");
+            System.out.println("7. Add Song to Album");
+            System.out.println("8. View Album Songs");
+
+
             System.out.println("0. Logout");
             
 
@@ -64,6 +69,13 @@ public class ArtistMenu {
                 case 6:
                     profileFlow();
                     break;
+                case 7:
+                    addSongToAlbumFlow();
+                    break;
+                case 8:
+                    viewAlbumSongsFlow();
+                    break;
+    
                 case 0:
                     System.out.println("Logged out.");
                     return;
@@ -72,8 +84,73 @@ public class ArtistMenu {
             }
         }
     }
+    
+    private void createAlbumFlow() {
+
+        System.out.println("\n--- Create Album ---");
+
+        System.out.print("Album name: ");
+        String name = sc.nextLine();
+
+        System.out.print("Genre: ");
+        String genre = sc.nextLine();
+
+        System.out.print("Release date (yyyy-mm-dd) OR blank: ");
+        String releaseDate = sc.nextLine();
+
+        AlbumService albumService = new AlbumService();
+
+        int albumId = albumService.createAlbum(
+                artist.getUserId(),
+                name,
+                genre,
+                releaseDate
+        );
+
+        if (albumId > 0) {
+            System.out.println("Album created successfully!");
+            System.out.println("Album ID : " + albumId);
+        } else {
+            System.out.println("Failed to create album.");
+        }
+    }
+
+    
+    private void addSongToAlbumFlow() {
+
+        System.out.println("\n--- ADD SONG TO ALBUM ---");
+
+        System.out.print("Album ID: ");
+        int albumId;
+        try {
+            albumId = Integer.parseInt(sc.nextLine().trim());
+        } catch (Exception e) {
+            System.out.println("Invalid album id");
+            return;
+        }
+
+        System.out.print("Song ID: ");
+        int songId;
+        try {
+            songId = Integer.parseInt(sc.nextLine().trim());
+        } catch (Exception e) {
+            System.out.println("Invalid song id");
+            return;
+        }
+
+        AlbumService albumService = new AlbumService();
+
+        boolean ok = albumService.addSongToAlbum(albumId, songId);
+
+        if (ok) {
+            System.out.println("Song added to album successfully!");
+        } else {
+            System.out.println("Failed (song may already be in album or invalid IDs)");
+        }
+    }
 
     private void uploadSongFlow() {
+
         System.out.println("\n--- Upload Song ---");
 
         System.out.print("Title: ");
@@ -86,15 +163,15 @@ public class ArtistMenu {
         int duration;
         try {
             duration = Integer.parseInt(sc.nextLine().trim());
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             System.out.println("Invalid duration");
             return;
         }
 
         System.out.print("Release date (yyyy-mm-dd) OR blank: ");
-        String releaseDate = sc.nextLine().trim();
+        String releaseDate = sc.nextLine();
 
-        boolean ok = songService.uploadSong(
+        int songId = songService.uploadSong(
                 title,
                 genre,
                 duration,
@@ -102,8 +179,9 @@ public class ArtistMenu {
                 artist.getUserId()
         );
 
-        if (ok) {
-            System.out.println("Song uploaded!");
+        if (songId > 0) {
+            System.out.println("Song uploaded successfully!");
+            System.out.println("Song ID = " + songId);
         } else {
             System.out.println("Upload failed!");
         }
@@ -123,32 +201,7 @@ public class ArtistMenu {
         }
     }
 
-    private void createAlbumFlow() {
-        System.out.println("\n--- Create Album ---");
-
-        System.out.print("Album name: ");
-        String name = sc.nextLine();
-
-        System.out.print("Genre: ");
-        String genre = sc.nextLine();
-
-        System.out.print("Release date (yyyy-mm-dd) OR blank: ");
-        String releaseDate = sc.nextLine();
-
-        boolean ok = albumDAO.createAlbum(
-                artist.getUserId(),
-                name,
-                genre,
-                releaseDate
-        );
-
-        if (ok) {
-            System.out.println("Album created!");
-        } else {
-            System.out.println("Failed!");
-        }
-    }
-
+    
     private void viewMyAlbumsFlow() {
         List<String> albums = albumDAO.viewMyAlbums(artist.getUserId());
 
@@ -177,6 +230,36 @@ public class ArtistMenu {
             System.out.println(s);
         }
     }
+    
+    private void viewAlbumSongsFlow() {
+
+        System.out.println("\n--- VIEW ALBUM SONGS ---");
+
+        System.out.print("Enter Album ID: ");
+        int albumId;
+
+        try {
+            albumId = Integer.parseInt(sc.nextLine().trim());
+        } catch (Exception e) {
+            System.out.println("Invalid album id");
+            return;
+        }
+
+        AlbumService albumService = new AlbumService();
+
+        List<String> songs = albumService.viewAlbumSongs(albumId);
+
+        if (songs == null || songs.isEmpty()) {
+            System.out.println("No songs found in this album.");
+            return;
+        }
+
+        System.out.println("\nSongs in Album:");
+        for (String s : songs) {
+            System.out.println(s);
+        }
+    }
+
 
     private void profileFlow() {
         while (true) {

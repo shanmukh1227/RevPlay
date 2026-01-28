@@ -23,9 +23,7 @@ public class UserDAO {
                                 String securityQuestion,
                                 String securityAnswer) {
 
-        String sql =
-            "INSERT INTO users(name,email,password,role,security_question,security_answer) " +
-            "VALUES(?,?,?,?,?,?)";
+        String sql ="INSERT INTO users(name,email,password,role,security_question,security_answer) " +"VALUES(?,?,?,?,?,?)";
 
         Connection con = null;
         PreparedStatement ps = null;
@@ -72,9 +70,7 @@ public class UserDAO {
 
     public User login(String email, String password) {
 
-        String sql =
-            "SELECT user_id, name, email, role " +
-            "FROM users WHERE email=? AND password=?";
+        String sql ="SELECT user_id, name, email, role " +"FROM users WHERE email=? AND password=?";
 
         Connection con = null;
         PreparedStatement ps = null;
@@ -89,14 +85,8 @@ public class UserDAO {
 
             rs = ps.executeQuery();
             if (rs.next()) {
-                User u = new User(
-                        rs.getInt("user_id"),
-                        rs.getString("name"),
-                        rs.getString("email"),
-                        rs.getString("role")
-                );
-                log.info("Login success: " + email +
-                        " (userId=" + u.getUserId() + ")");
+                User u = new User(rs.getInt("user_id"),rs.getString("name"),rs.getString("email"),rs.getString("role"));
+                log.info("Login success: " + email +" (userId=" + u.getUserId() + ")");
                 return u;
             }
 
@@ -121,8 +111,7 @@ public class UserDAO {
 
     public String getSecurityQuestion(String email) {
 
-        String sql =
-            "SELECT security_question FROM users WHERE email=?";
+        String sql ="SELECT security_question FROM users WHERE email=?";
 
         Connection con = null;
         PreparedStatement ps = null;

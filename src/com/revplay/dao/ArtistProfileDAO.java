@@ -16,10 +16,7 @@ public class ArtistProfileDAO {
         PreparedStatement ps = null;
         ResultSet rs = null;
 
-        String sql =
-            "SELECT artist_id, bio, genre, instagram, youtube, spotify " +
-            "FROM artist_profile " +
-            "WHERE artist_id=?";
+        String sql ="SELECT artist_id, bio, genre, instagram, youtube, spotify " +"FROM artist_profile " +"WHERE artist_id=?";
 
         try {
             con = DBConnection.getConnection();
@@ -28,13 +25,7 @@ public class ArtistProfileDAO {
 
             rs = ps.executeQuery();
             if (rs.next()) {
-                return new ArtistProfile(
-                        rs.getInt("artist_id"),
-                        rs.getString("bio"),
-                        rs.getString("genre"),
-                        rs.getString("instagram"),
-                        rs.getString("youtube"),
-                        rs.getString("spotify")
+                return new ArtistProfile(rs.getInt("artist_id"),rs.getString("bio"), rs.getString("genre"), rs.getString("instagram"),rs.getString("youtube"),rs.getString("spotify")
                 );
             }
 

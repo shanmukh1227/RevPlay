@@ -82,6 +82,6 @@ public class UserService {
     private boolean isValidPassword(String pass) {
         if (pass == null) return false;
 
-        return pass.trim().length() >= 4;
+        return pass.trim().length() >= 3;
     }
 }

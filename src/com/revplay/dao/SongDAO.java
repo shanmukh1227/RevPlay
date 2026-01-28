@@ -298,58 +298,71 @@ public class SongDAO {
         return list;
     }
 
-    public boolean uploadSong(String title,
-                              String genre,
-                              int durationSeconds,
-                              String releaseDate,
-                              int artistId) {
+	public int uploadSong(String title, String genre, int durationSeconds,
+			String releaseDate, int artistId) {
 
-        String sql =
-            "INSERT INTO songs(title, genre, duration_seconds, release_date, artist_id) " +
-            "VALUES(?,?,?,?,?)";
+		Connection con = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
 
-        Connection con = null;
-        PreparedStatement ps = null;
+		String insertSql = "INSERT INTO songs(song_id, title, genre, duration_seconds, release_date, artist_id) "
+				+ "VALUES (songs_seq.NEXTVAL, ?, ?, ?, ?, ?)";
 
-        try {
-            con = DBConnection.getConnection();
-            ps = con.prepareStatement(sql);
+		String idSql = "SELECT songs_seq.CURRVAL FROM dual";
 
-            ps.setString(1, title);
-            ps.setString(2, genre);
-            ps.setInt(3, durationSeconds);
+		try {
+			con = DBConnection.getConnection();
 
-            if (releaseDate == null || releaseDate.trim().length() == 0) {
-                ps.setNull(4, java.sql.Types.DATE);
-            } else {
-                ps.setDate(4, java.sql.Date.valueOf(releaseDate));
-            }
+			ps = con.prepareStatement(insertSql);
+			ps.setString(1, title);
+			ps.setString(2, genre);
+			ps.setInt(3, durationSeconds);
 
-            ps.setInt(5, artistId);
+			if (releaseDate == null || releaseDate.trim().length() == 0) {
+				ps.setNull(4, java.sql.Types.DATE);
+			} else {
+				ps.setDate(4, java.sql.Date.valueOf(releaseDate));
+			}
 
-            return ps.executeUpdate() > 0;
+			ps.setInt(5, artistId);
+			ps.executeUpdate();
+			ps.close();
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+			ps = con.prepareStatement(idSql);
+			rs = ps.executeQuery();
 
-        } finally {
-            try {
-                if (ps != null) ps.close();
-                if (con != null) con.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+			if (rs.next()) {
+				return rs.getInt(1); // song_id
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (ps != null)
+					ps.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (con != null)
+					con.close();
+			} catch (Exception e) {
+			}
+		}
+
+		return -1;
+	}
+
 
     public List<String> viewMySongs(int artistId) {
 
-        String sql =
-            "SELECT song_id, title, genre, duration_seconds, play_count, created_at " +
-            "FROM songs " +
-            "WHERE artist_id=? " +
-            "ORDER BY created_at DESC";
+        String sql ="SELECT song_id, title, genre, duration_seconds, play_count, created_at " +"FROM songs " +"WHERE artist_id=? " +"ORDER BY created_at DESC";
 
         List<String> list = new ArrayList<String>();
 
@@ -365,17 +378,8 @@ public class SongDAO {
             rs = ps.executeQuery();
             while (rs.next()) {
                 String row =
-                        rs.getInt("song_id")
-                                + " | "
-                                + rs.getString("title")
-                                + " | "
-                                + rs.getString("genre")
-                                + " | "
-                                + rs.getInt("duration_seconds")
-                                + " sec | Plays: "
-                                + rs.getInt("play_count")
-                                + " | "
-                                + rs.getString("created_at");
+                        rs.getInt("song_id")+ " | "+ rs.getString("title")+ " | "+ rs.getString("genre")+ " | "+ rs.getInt("duration_seconds")+ " sec | Plays: "
+                                + rs.getInt("play_count")+ " | "+ rs.getString("created_at");
                 list.add(row);
             }
 
@@ -397,8 +401,7 @@ public class SongDAO {
 
     public List<String> getTopPlayedSongs(int artistId, int limit) {
 
-        String sql =
-        		 "SELECT * FROM ( " +
+        String sql = "SELECT * FROM ( " +
         			        "   SELECT song_id, title, play_count " +
         			        "   FROM songs " +
         			        "   WHERE artist_id=? " +
@@ -446,8 +449,7 @@ public class SongDAO {
 
     public List<Song> browseSongsByGenre(String genre) {
 
-        String sql =
-            "SELECT s.song_id, s.title, s.genre, s.duration_seconds, u.name AS artist_name " +
+        String sql ="SELECT s.song_id, s.title, s.genre, s.duration_seconds, u.name AS artist_name " +
             "FROM songs s " +
             "JOIN users u ON s.artist_id = u.user_id " +
             "WHERE s.genre=? " +

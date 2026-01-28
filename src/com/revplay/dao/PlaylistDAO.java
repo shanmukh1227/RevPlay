@@ -227,9 +227,7 @@ public class PlaylistDAO {
         Connection con = null;
         PreparedStatement ps = null;
 
-        String sql =
-            "UPDATE playlists SET playlist_name=?, description=?, privacy=? " +
-            "WHERE playlist_id=? AND user_id=?";
+        String sql = "UPDATE playlists SET playlist_name=?, description=?, privacy=? " +"WHERE playlist_id=? AND user_id=?";
 
         try {
             con = DBConnection.getConnection();
@@ -262,8 +260,7 @@ public class PlaylistDAO {
         Connection con = null;
         PreparedStatement ps = null;
 
-        String sql =
-            "DELETE FROM playlists WHERE playlist_id=? AND user_id=?";
+        String sql ="DELETE FROM playlists WHERE playlist_id=? AND user_id=?";
 
         try {
             con = DBConnection.getConnection();
@@ -310,14 +307,7 @@ public class PlaylistDAO {
 
             rs = ps.executeQuery();
             while (rs.next()) {
-                String row =
-                        rs.getInt("playlist_id")
-                                + " | "
-                                + rs.getString("playlist_name")
-                                + " | Owner: "
-                                + rs.getString("owner_name")
-                                + " | "
-                                + rs.getString("created_at");
+                String row =rs.getInt("playlist_id")+ " | "+ rs.getString("playlist_name")+ " | Owner: "+ rs.getString("owner_name")+ " | " + rs.getString("created_at");
                 list.add(row);
             }
 

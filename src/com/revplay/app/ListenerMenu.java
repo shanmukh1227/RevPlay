@@ -25,7 +25,7 @@ public class ListenerMenu {
 
     public void show() {
         while (true) {
-            System.out.println("\n==== LISTENER MENU ====");
+            System.out.println("\n------- LISTENER MENU -------");
             System.out.println("Welcome: " + user.getName()
                     + " (ID: " + user.getUserId() + ")");
             System.out.println("1. Search Songs");
