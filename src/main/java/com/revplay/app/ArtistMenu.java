@@ -249,66 +249,68 @@ public class ArtistMenu {
 	}
 
 	private void profileFlow() {
-		while (true) {
-			System.out.println("\n--- ARTIST PROFILE ---");
-			System.out.println("1. View Profile");
-			System.out.println("2. Update Profile");
-			System.out.println("0. Back");
-			System.out.print("Choose: ");
+	    while (true) {
+	        System.out.println("\n--- ARTIST PROFILE ---");
+	        System.out.println("1. View Profile");
+	        System.out.println("2. Update Profile");
+	        System.out.println("0. Back");
+	        System.out.print("Choose: ");
 
-			int ch = sc.nextInt();
-			sc.nextLine();
+	        int ch = sc.nextInt();
+	        sc.nextLine();
 
-			switch (ch) {
+	        switch (ch) {
 
-			case 1:
-				ArtistProfile p = profileDAO.getProfile(artist.getUserId());
+	        case 1:
+	            ArtistProfile p = profileDAO.getProfile(artist.getUserId());
 
-				if (p == null) {
-					System.out.println("No profile yet. Update to create.");
-				} else {
-					System.out.println("Bio: " + p.getBio());
-					System.out.println("Genre: " + p.getGenre());
-					System.out.println("Instagram: " + p.getInstagram());
-					System.out.println("YouTube: " + p.getYoutube());
-					System.out.println("Spotify: " + p.getSpotify());
-				}
-				break;
+	            if (p == null) {
+	                System.out.println("No profile yet. Update to create.");
+	            } else {
+	                System.out.println("Bio: " + p.getBio());
+	                System.out.println("Instagram: " + p.getInstagram());
+	                System.out.println("YouTube: " + p.getYoutube());
+	                System.out.println("Spotify: " + p.getSpotify());
+	            }
+	            break;
 
-			case 2:
-				System.out.print("Bio: ");
-				String bio = sc.nextLine();
+	        case 2:
+	            System.out.print("Bio: ");
+	            String bio = sc.nextLine();
 
-				System.out.print("Genre: ");
-				String genre = sc.nextLine();
+	            System.out.print("Instagram link: ");
+	            String insta = sc.nextLine();
 
-				System.out.print("Instagram link: ");
-				String insta = sc.nextLine();
+	            System.out.print("YouTube link: ");
+	            String yt = sc.nextLine();
 
-				System.out.print("YouTube link: ");
-				String yt = sc.nextLine();
+	            System.out.print("Spotify link: ");
+	            String sp = sc.nextLine();
 
-				System.out.print("Spotify link: ");
-				String sp = sc.nextLine();
+	            ArtistProfile profile = new ArtistProfile(
+	                    artist.getUserId(),
+	                    bio,
+	                    insta,
+	                    yt,
+	                    sp
+	            );
 
-				ArtistProfile profile = new ArtistProfile(artist.getUserId(),
-						bio, genre, insta, yt, sp);
+	            boolean ok = profileDAO.upsertProfile(profile);
 
-				boolean ok = profileDAO.upsertProfile(profile);
+	            if (ok) {
+	                System.out.println("Profile saved");
+	            } else {
+	                System.out.println("Failed");
+	            }
+	            break;
 
-				if (ok) {
-					System.out.println("Profile saved");
-				} else {
-					System.out.println("Failed");
-				}
-				break;
+	        case 0:
+	            return;
 
-			case 0:
-				return;
-
-			default:
-				System.out.println("Invalid option");
-			}
-		}
+	        default:
+	            System.out.println("Invalid option");
+	        }
+	    }
 	}
+
 }

@@ -72,6 +72,32 @@ public class ListenerMenu {
             }
         }
     }
+   
+    
+    private void searchSongsFlow() {
+
+        System.out.print("Enter song name or keyword: ");
+        String keyword = sc.nextLine().trim();
+
+        List<Song> songs = songService.searchSongs(keyword);
+
+        if (songs == null || songs.isEmpty()) {
+            System.out.println("No songs found.");
+            return;
+        }
+
+        System.out.println("\n--- SEARCH RESULTS ---");
+        for (Song s : songs) {
+            System.out.println(
+                s.getSongId() + " | " +
+                s.getTitle() + " | " +
+                s.getGenre() + " | " +
+                s.getDurationSeconds() + " sec | Artist: " +
+                s.getArtistName()
+            );
+        }
+    }
+
 
  
 
@@ -115,6 +141,31 @@ public class ListenerMenu {
 
         songService.playSong(user.getUserId(), songId);
         playerControls(songs, songId);
+    }
+     
+    private void browseByGenreFlow() {
+
+        System.out.print("Enter Genre: ");
+        String genre = sc.nextLine().trim();
+
+        List<Song> songs = songService.browseSongsByGenre(genre);
+
+        if (songs == null || songs.isEmpty()) {
+            System.out.println("No songs found for this genre.");
+            return;
+        }
+
+        System.out.println("\n--- SONGS IN GENRE: " + genre + " ---");
+        for (int i = 0; i < songs.size(); i++) {
+            Song s = songs.get(i);
+            System.out.println(
+                    s.getSongId() + " | " +
+                    s.getTitle() + " | " +
+                    s.getGenre() + " | " +
+                    s.getDurationSeconds() + " sec | Artist: " +
+                    s.getArtistName()
+            );
+        }
     }
 
     private void playerControls(List<Song> songs, int startSongId) {
@@ -189,6 +240,86 @@ public class ListenerMenu {
             }
         }
     }
+    
+    private void favoritesMenu() {
+
+        while (true) {
+            System.out.println("\n--- FAVORITES ---");
+            System.out.println("1. View Favorites");
+            System.out.println("2. Add to Favorites");
+            System.out.println("3. Remove from Favorites");
+            System.out.println("0. Back");
+            System.out.print("Choose: ");
+
+            int ch = sc.nextInt();
+            sc.nextLine();
+
+            switch (ch) {
+
+                case 1:
+                    List<String> favs =
+                            songService.viewFavorites(user.getUserId());
+
+                    if (favs == null || favs.isEmpty()) {
+                        System.out.println("No favorites yet.");
+                    } else {
+                        for (int i = 0; i < favs.size(); i++) {
+                            System.out.println(favs.get(i));
+                        }
+                    }
+                    break;
+
+                case 2:
+                    System.out.print("Song ID: ");
+                    int addId = sc.nextInt();
+                    sc.nextLine();
+
+                    boolean added =
+                            songService.addToFavorites(user.getUserId(), addId);
+
+                    System.out.println(added
+                            ? "Added to favorites."
+                            : "Already in favorites or invalid song.");
+                    break;
+
+                case 3:
+                    System.out.print("Song ID: ");
+                    int remId = sc.nextInt();
+                    sc.nextLine();
+
+                    boolean removed =
+                            songService.removeFromFavorites(user.getUserId(), remId);
+
+                    System.out.println(removed
+                            ? "Removed from favorites."
+                            : "Song not found in favorites.");
+                    break;
+
+                case 0:
+                    return;
+
+                default:
+                    System.out.println("Invalid option");
+            }
+        }
+    }
+    
+    private void recentlyPlayedFlow() {
+
+        List<String> list =
+                songService.getRecentlyPlayed(user.getUserId(), 10);
+
+        if (list == null || list.isEmpty()) {
+            System.out.println("No recently played songs.");
+            return;
+        }
+
+        System.out.println("\n--- RECENTLY PLAYED ---");
+        for (int i = 0; i < list.size(); i++) {
+            System.out.println(list.get(i));
+        }
+    }
+
 
  
 
@@ -266,11 +397,64 @@ public class ListenerMenu {
             }
         }
     }
+    private void publicPlaylistsMenu() {
+
+        while (true) {
+            System.out.println("\n--- PUBLIC PLAYLISTS ---");
+            System.out.println("1. View Public Playlists");
+            System.out.println("2. Open Playlist");
+            System.out.println("0. Back");
+            System.out.print("Choose: ");
+
+            int ch = sc.nextInt();
+            sc.nextLine();
+
+            switch (ch) {
+
+                case 1:
+                    List<String> list =
+                            playlistService.viewPublicPlaylists(user.getUserId());
+
+                    if (list == null || list.isEmpty()) {
+                        System.out.println("No public playlists.");
+                    } else {
+                        for (int i = 0; i < list.size(); i++) {
+                            System.out.println(list.get(i));
+                        }
+                    }
+                    break;
+
+                case 2:
+                    System.out.print("Playlist ID: ");
+                    int pid = sc.nextInt();
+                    sc.nextLine();
+
+                    List<String> songs =
+                            playlistService.viewPlaylistSongsPublic(pid);
+
+                    if (songs == null || songs.isEmpty()) {
+                        System.out.println("No songs or invalid playlist.");
+                    } else {
+                        System.out.println("\n--- PLAYLIST SONGS ---");
+                        for (int i = 0; i < songs.size(); i++) {
+                            System.out.println(songs.get(i));
+                        }
+                    }
+                    break;
+
+                case 0:
+                    return;
+
+                default:
+                    System.out.println("Invalid option");
+            }
+        }
+    }
 
 
-    private void searchSongsFlow() {}
-    private void browseByGenreFlow() {}
-    private void favoritesMenu() {}
-    private void recentlyPlayedFlow() {}
-    private void publicPlaylistsMenu() {}
+   
+    
+    
+    
+  
 }

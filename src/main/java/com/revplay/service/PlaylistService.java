@@ -1,113 +1,193 @@
 package com.revplay.service;
 
 import com.revplay.dao.PlaylistDAO;
+import com.revplay.exception.PlaylistServiceException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class PlaylistService {
 
-	private PlaylistDAO playlistDAO;
+    private PlaylistDAO playlistDAO;
 
-	public PlaylistService() {
-		this.playlistDAO = new PlaylistDAO();
-	}
-	
-	 // for tests (Mockito)
+    // Used by REAL application
+    public PlaylistService() {
+        this.playlistDAO = new PlaylistDAO();
+    }
+
+    // Used ONLY by tests (Mockito / manual mock)
     public PlaylistService(PlaylistDAO playlistDAO) {
         this.playlistDAO = playlistDAO;
     }
 
-	public int createPlaylist(int userId, String name, String desc,
-			String privacy) {
-		if (userId <= 0)
-			return -1;
-		if (name == null || name.trim().isEmpty())
-			return -1;
+    public int createPlaylist(int userId, String name, String desc,
+                              String privacy) {
 
-		String p = normalizePrivacy(privacy);
-		if (p == null)
-			return -1;
+        if (userId <= 0) {
+            throw new PlaylistServiceException("Invalid user id");
+        }
 
-		if (desc == null)
-			desc = "";
+        if (name == null || name.trim().isEmpty()) {
+            throw new PlaylistServiceException("Playlist name cannot be empty");
+        }
 
-		return playlistDAO.createPlaylist(userId, name.trim(), desc.trim(), p);
-	}
+        String p = normalizePrivacy(privacy);
+        if (p == null) {
+            throw new PlaylistServiceException("Invalid privacy value");
+        }
 
-	public List<String> viewMyPlaylists(int userId) {
-		if (userId <= 0) {
-			return new ArrayList<String>();
-		}
-		return playlistDAO.viewMyPlaylists(userId);
-	}
+        if (desc == null) {
+            desc = "";
+        }
 
-	public List<String> viewPlaylistSongs(int playlistId) {
-		if (playlistId <= 0) {
-			return new ArrayList<String>();
-		}
-		return playlistDAO.viewPlaylistSongs(playlistId);
-	}
+        int playlistId = playlistDAO.createPlaylist(
+                userId,
+                name.trim(),
+                desc.trim(),
+                p
+        );
 
-	public boolean addSongToPlaylist(int playlistId, int songId) {
-		if (playlistId <= 0 || songId <= 0)
-			return false;
-		return playlistDAO.addSongToPlaylist(playlistId, songId);
-	}
+        if (playlistId <= 0) {
+            throw new PlaylistServiceException("Failed to create playlist");
+        }
 
-	public boolean removeSongFromPlaylist(int playlistId, int songId) {
-		if (playlistId <= 0 || songId <= 0)
-			return false;
-		return playlistDAO.removeSongFromPlaylist(playlistId, songId);
-	}
+        return playlistId;
+    }
 
-	public boolean updatePlaylist(int playlistId, int userId, String newName,
-			String newDesc, String privacy) {
+    public List<String> viewMyPlaylists(int userId) {
 
-		if (playlistId <= 0 || userId <= 0)
-			return false;
-		if (newName == null || newName.trim().isEmpty())
-			return false;
+        if (userId <= 0) {
+            throw new PlaylistServiceException("Invalid user id");
+        }
 
-		String p = normalizePrivacy(privacy);
-		if (p == null)
-			return false;
+        List<String> playlists = playlistDAO.viewMyPlaylists(userId);
 
-		if (newDesc == null)
-			newDesc = "";
+        return playlists == null ? new ArrayList<String>() : playlists;
+    }
 
-		return playlistDAO.updatePlaylist(playlistId, userId, newName.trim(),
-				newDesc.trim(), p);
-	}
+    public List<String> viewPlaylistSongs(int playlistId) {
 
-	public boolean deletePlaylist(int playlistId, int userId) {
-		if (playlistId <= 0 || userId <= 0)
-			return false;
-		return playlistDAO.deletePlaylist(playlistId, userId);
-	}
+        if (playlistId <= 0) {
+            throw new PlaylistServiceException("Invalid playlist id");
+        }
 
-	public List<String> viewPublicPlaylists(int currentUserId) {
-		if (currentUserId <= 0) {
-			return new ArrayList<String>();
-		}
-		return playlistDAO.viewPublicPlaylists(currentUserId);
-	}
+        List<String> songs = playlistDAO.viewPlaylistSongs(playlistId);
 
-	public List<String> viewPlaylistSongsPublic(int playlistId) {
-		if (playlistId <= 0) {
-			return new ArrayList<String>();
-		}
-		return playlistDAO.viewPlaylistSongsPublic(playlistId);
-	}
+        return songs == null ? new ArrayList<String>() : songs;
+    }
 
-	private String normalizePrivacy(String privacy) {
-		if (privacy == null)
-			return null;
+    public boolean addSongToPlaylist(int playlistId, int songId) {
 
-		String p = privacy.trim().toUpperCase();
-		if ("PUBLIC".equals(p) || "PRIVATE".equals(p)) {
-			return p;
-		}
-		return null;
-	}
+        if (playlistId <= 0 || songId <= 0) {
+            throw new PlaylistServiceException("Invalid playlist or song id");
+        }
+
+        boolean success = playlistDAO.addSongToPlaylist(playlistId, songId);
+
+        if (!success) {
+            throw new PlaylistServiceException("Song already exists in playlist");
+        }
+
+        return true;
+    }
+
+    public boolean removeSongFromPlaylist(int playlistId, int songId) {
+
+        if (playlistId <= 0 || songId <= 0) {
+            throw new PlaylistServiceException("Invalid playlist or song id");
+        }
+
+        boolean success = playlistDAO.removeSongFromPlaylist(playlistId, songId);
+
+        if (!success) {
+            throw new PlaylistServiceException("Song not found in playlist");
+        }
+
+        return true;
+    }
+
+    public boolean updatePlaylist(int playlistId, int userId, String newName,
+                                  String newDesc, String privacy) {
+
+        if (playlistId <= 0 || userId <= 0) {
+            throw new PlaylistServiceException("Invalid playlist or user id");
+        }
+
+        if (newName == null || newName.trim().isEmpty()) {
+            throw new PlaylistServiceException("Playlist name cannot be empty");
+        }
+
+        String p = normalizePrivacy(privacy);
+        if (p == null) {
+            throw new PlaylistServiceException("Invalid privacy value");
+        }
+
+        if (newDesc == null) {
+            newDesc = "";
+        }
+
+        boolean updated = playlistDAO.updatePlaylist(
+                playlistId,
+                userId,
+                newName.trim(),
+                newDesc.trim(),
+                p
+        );
+
+        if (!updated) {
+            throw new PlaylistServiceException("Failed to update playlist");
+        }
+
+        return true;
+    }
+
+    public boolean deletePlaylist(int playlistId, int userId) {
+
+        if (playlistId <= 0 || userId <= 0) {
+            throw new PlaylistServiceException("Invalid playlist or user id");
+        }
+
+        boolean deleted = playlistDAO.deletePlaylist(playlistId, userId);
+
+        if (!deleted) {
+            throw new PlaylistServiceException("Failed to delete playlist");
+        }
+
+        return true;
+    }
+
+    public List<String> viewPublicPlaylists(int currentUserId) {
+
+        if (currentUserId <= 0) {
+            throw new PlaylistServiceException("Invalid user id");
+        }
+
+        List<String> playlists = playlistDAO.viewPublicPlaylists(currentUserId);
+
+        return playlists == null ? new ArrayList<String>() : playlists;
+    }
+
+    public List<String> viewPlaylistSongsPublic(int playlistId) {
+
+        if (playlistId <= 0) {
+            throw new PlaylistServiceException("Invalid playlist id");
+        }
+
+        List<String> songs = playlistDAO.viewPlaylistSongsPublic(playlistId);
+
+        return songs == null ? new ArrayList<String>() : songs;
+    }
+
+    private String normalizePrivacy(String privacy) {
+
+        if (privacy == null) {
+            return null;
+        }
+
+        String p = privacy.trim().toUpperCase();
+        if ("PUBLIC".equals(p) || "PRIVATE".equals(p)) {
+            return p;
+        }
+        return null;
+    }
 }

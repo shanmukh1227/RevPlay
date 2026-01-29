@@ -1,46 +1,77 @@
 package com.revplay.service;
 
 import com.revplay.dao.AlbumDAO;
+import com.revplay.exception.AlbumServiceException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class AlbumService {
 
-	private AlbumDAO albumDAO;
+    private AlbumDAO albumDAO;
 
-	public AlbumService() {
-		this.albumDAO = new AlbumDAO();
-	}
-	
-	// Used ONLY by tests (Mockito / manual mock)
-	  public AlbumService(AlbumDAO albumDAO) {
-	        this.albumDAO = albumDAO;
-	    }
+    // Used by REAL application
+    public AlbumService() {
+        this.albumDAO = new AlbumDAO();
+    }
 
-	public int createAlbum(int artistId, String name, String genre,
-			String releaseDate) {
+    // Used ONLY by tests (Mockito / manual mock)
+    public AlbumService(AlbumDAO albumDAO) {
+        this.albumDAO = albumDAO;
+    }
 
-		if (artistId <= 0)
-			return -1;
-		if (name == null || name.trim().isEmpty())
-			return -1;
+    public int createAlbum(int artistId, String name, String genre,
+                           String releaseDate) {
 
-		return albumDAO.createAlbum(artistId, name.trim(), genre == null ? ""
-				: genre.trim(), releaseDate);
-	}
+        if (artistId <= 0) {
+            throw new AlbumServiceException("Invalid artist id");
+        }
 
-	public boolean addSongToAlbum(int albumId, int songId) {
-		if (albumId <= 0 || songId <= 0) {
-			return false;
-		}
-		return albumDAO.addSongToAlbum(albumId, songId);
-	}
+        if (name == null || name.trim().isEmpty()) {
+            throw new AlbumServiceException("Album name cannot be empty");
+        }
 
-	public List<String> viewAlbumSongs(int albumId) {
-		if (albumId <= 0) {
-			return new ArrayList<String>();
-		}
-		return albumDAO.viewAlbumSongs(albumId);
-	}
+        int albumId = albumDAO.createAlbum(
+                artistId,
+                name.trim(),
+                genre == null ? "" : genre.trim(),
+                releaseDate
+        );
+
+        if (albumId <= 0) {
+            throw new AlbumServiceException("Failed to create album");
+        }
+
+        return albumId;
+    }
+
+    public boolean addSongToAlbum(int albumId, int songId) {
+
+        if (albumId <= 0 || songId <= 0) {
+            throw new AlbumServiceException("Invalid album or song id");
+        }
+
+        boolean success = albumDAO.addSongToAlbum(albumId, songId);
+
+        if (!success) {
+            throw new AlbumServiceException("Song already exists in album");
+        }
+
+        return true;
+    }
+
+    public List<String> viewAlbumSongs(int albumId) {
+
+        if (albumId <= 0) {
+            throw new AlbumServiceException("Invalid album id");
+        }
+
+        List<String> songs = albumDAO.viewAlbumSongs(albumId);
+
+        if (songs == null) {
+            return new ArrayList<String>();
+        }
+
+        return songs;
+    }
 }
