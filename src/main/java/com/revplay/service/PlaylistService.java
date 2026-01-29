@@ -12,6 +12,11 @@ public class PlaylistService {
 	public PlaylistService() {
 		this.playlistDAO = new PlaylistDAO();
 	}
+	
+	 // for tests (Mockito)
+    public PlaylistService(PlaylistDAO playlistDAO) {
+        this.playlistDAO = playlistDAO;
+    }
 
 	public int createPlaylist(int userId, String name, String desc,
 			String privacy) {

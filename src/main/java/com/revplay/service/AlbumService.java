@@ -12,6 +12,11 @@ public class AlbumService {
 	public AlbumService() {
 		this.albumDAO = new AlbumDAO();
 	}
+	
+	// Used ONLY by tests (Mockito / manual mock)
+	  public AlbumService(AlbumDAO albumDAO) {
+	        this.albumDAO = albumDAO;
+	    }
 
 	public int createAlbum(int artistId, String name, String genre,
 			String releaseDate) {

@@ -13,7 +13,12 @@ public class SongService {
 	public SongService() {
 		this.songDAO = new SongDAO();
 	}
-
+     
+	  // for unit testing (Mockito)
+    public SongService(SongDAO songDAO) {
+        this.songDAO = songDAO;
+    }
+    
 	public List<Song> searchSongs(String keyword) {
 		if (keyword == null) {
 			keyword = "";

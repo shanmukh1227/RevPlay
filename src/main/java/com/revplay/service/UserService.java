@@ -10,6 +10,11 @@ public class UserService {
 	public UserService() {
 		this.userDAO = new UserDAO();
 	}
+	
+	  // for unit testing (Mockito)
+    public UserService(UserDAO userDAO) {
+        this.userDAO = userDAO;
+    }
 
 	public boolean register(String name, String email, String password,
 			String role, String securityQuestion, String securityAnswer) {

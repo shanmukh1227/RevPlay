@@ -73,7 +73,7 @@ public class ListenerMenu {
         }
     }
 
-    /* ================= PLAY SONG ================= */
+ 
 
     private void playSongFlow() {
         System.out.print("Enter Song ID: ");
@@ -190,7 +190,7 @@ public class ListenerMenu {
         }
     }
 
-    /* ================= PLAYLIST ================= */
+ 
 
     private void playlistsMenu() {
         while (true) {
@@ -224,7 +224,7 @@ public class ListenerMenu {
                     }
                     break;
 
-                case 3: // OPEN
+                case 3: 
                     System.out.print("Playlist ID: ");
                     int pidView = sc.nextInt();
                     sc.nextLine();
@@ -243,7 +243,7 @@ public class ListenerMenu {
                     }
                     break;
 
-                case 4: // ✅ ADD SONG (MISSING PART)
+                case 4: 
                     System.out.print("Playlist ID: ");
                     int pidAdd = sc.nextInt();
 
@@ -267,8 +267,6 @@ public class ListenerMenu {
         }
     }
 
-
-    /* ===== Stub methods (unchanged) ===== */
 
     private void searchSongsFlow() {}
     private void browseByGenreFlow() {}
